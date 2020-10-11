@@ -39,6 +39,8 @@ class CityManager(object):
         self.cityDict = dict()
 
     def push_back(self,cityname,companyname,isMaster):
+        cityname = cityname.strip()
+        companyname = companyname.strip()
         if cityname not in self.cityDict:
             city = City(cityname)
             self.cityDict[cityname] = city

@@ -11,6 +11,42 @@ class ExcelOperator():
         self.companysManagers = dict()
         self.citysManagers = dict()
         self.matrixSheets = dict()
+        self.replaceCityDicts = dict()
+    @staticmethod
+    def preProcess(operator,excelName):
+        data = xlrd.open_workbook(excelName)
+        sh2006 = data.sheet_by_name(u'2006无城市坐标')  # 表名法
+        sh2019 = data.sheet_by_name(u'2019无城市坐标')  # 表名法
+        totalRow = sh2006.nrows
+        change = 0
+        for row in range(2, totalRow):
+            origin = sh2006.cell_value(row,0)
+            replace = sh2006.cell_value(row,1)
+            origin = origin.strip()
+            if "改为" in replace:
+                replace = replace.lstrip("改为").strip()
+                operator.replaceCityDicts[origin] = replace
+                change +=1
+        print("change city name in 2006 is %d\n"%change)
+        change = 0
+        totalRow = sh2019.nrows
+        for row in range(2, totalRow):
+            origin = sh2019.cell_value(row, 0)
+            replace = sh2019.cell_value(row, 1)
+            origin = origin.strip()
+            if "改为" in replace:
+                replace = replace.lstrip("改为").strip()
+                operator.replaceCityDicts[origin] = replace
+                change+=1
+        print("change city name in 2019 is %d\n" % change)
+
+
+
+    def __replace_city_name(self,cityName):
+        if cityName in self.replaceCityDicts:
+            return self.replaceCityDicts[cityName]
+        else:
+            return cityName
 
     def startAssignMatrix(self, excelName):
         cityManager = self.citysManagers[excelName]
@@ -38,6 +74,8 @@ class ExcelOperator():
             for row in range(2, totalRow):
                 companyName = sh.cell_value(row, 0)
                 cityName = sh.cell_value(row, 1)
+                cityName = self.__replace_city_name(cityName)
+
                 isMater = True if sh.cell_value(row, 3) == 1 else False
                 companyManager.push_back(companyname=companyName, city=cityName, ismaster=isMater)
                 cityManager.push_back(cityName, companyName, isMater)

@@ -119,6 +119,8 @@ class CompanyManager(object):
         self.companyDict = dict()
 
     def push_back(self, companyname, city, ismaster):
+        companyname = companyname.strip()
+        city = city.strip()
         if companyname not in self.companyDict.keys():
             company = Company(companyname)
             self.companyDict[companyname] = company
