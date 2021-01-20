@@ -2,13 +2,13 @@ import xlrd  # 读模块
 import xlsxwriter  # 写模块
 
 class CountryInfo:
-    def __init__(self,chineseName,number,ratio,rank):
+    def __init__(self,chineseName,number,ratio:str,rank):
         self.rank = rank
         self.chineseName = chineseName
         self.number = number
         self.ratio = ratio
     def combinate_info(self):
-        return self.chineseName+"("+str(self.number)+")"
+        return self.chineseName+"("+str(int(self.number))+")"
 
 class SameRwFunc():
     # handleMatrixName = ["金融", "保险", "船级社", "海事法律"]
@@ -27,25 +27,30 @@ class SameRwFunc():
         for name in SameRwFunc.handleMatrixName:
             self.readMatrixSheets[name] = data.sheet_by_name(name)
         self.writeMatrixSheets = d
-    def process(self):
+    def process(self,is2006 = True):
         for name in self.readMatrixSheets:
             self.rankDicts[name] = dict()
             rankDict = self.rankDicts[name]
             cols = [0,0,0,0]
             sheet = self.readMatrixSheets[name]
             totalRow = sheet.nrows
+            start = is2006
             for col in range(0,sheet.row_len(1)):
-                val = str(sheet.cell_value(0,col))
-                if SameRwFunc.handleColName[0] in val:
-                    cols[0] = col
-                if SameRwFunc.handleColName[1] in val:
-                   cols[1] = col
-                if SameRwFunc.handleColName[2] in val:
-                   cols[2] = col
-                if SameRwFunc.handleColName[3] in val:
-                   cols[3] = col
-                if "2019" in val:
-                    break
+                val = str(sheet.cell_value(0, col))
+                if start:
+                    if SameRwFunc.handleColName[0] in val:
+                        cols[0] = col
+                    if SameRwFunc.handleColName[1] in val:
+                        cols[1] = col
+                    if SameRwFunc.handleColName[2] in val:
+                        cols[2] = col
+                    if SameRwFunc.handleColName[3] in val:
+                        cols[3] = col
+                    if "2019" in val:
+                        break
+                else:
+                    if "2019" in val:
+                        start = True
             for row in range(1, totalRow):
                 s = sheet.cell_value(row, cols[0])
                 if '' == s:
@@ -86,11 +91,11 @@ class SameRwFunc():
                     print("error write blank (%d,%d):%s\n" % (writeRow, 1, second))
                 else:
                     print("write blank (%d,%d):%s success\n" % (writeRow, 1, second))
-
-                if -1 == writeSheet.write(writeRow, 2, rankCitys[0].ratio):
-                    print("error write blank (%d,%d):%f\n" % (writeRow, 2, rankCitys[0].ratio))
+                outstr = str(round(rankCitys[0].ratio * 100,2))+'%'
+                if -1 == writeSheet.write(writeRow, 2, outstr):
+                    print("error write blank (%d,%d):%s\n" % (writeRow, 2, outstr))
                 else:
-                    print("write blank (%d,%d):%f success\n" % (writeRow, 2, rankCitys[0].ratio))
+                    print("write blank (%d,%d):%s success\n" % (writeRow, 2, outstr))
                 writeRow+=1
             print("finish sheet %s success\n" % "output_"+name)
         workboot.close()
@@ -99,4 +104,15 @@ if __name__ == "__main__":
     lele = SameRwFunc("/home/zhangyu/PycharmProjects/excel_city_data_handle/data/func/new_up_stream.xlsx")
     lele.preProcess()
     lele.process()
-    lele.afterProcess("/home/zhangyu/PycharmProjects/excel_city_data_handle/data/func/output_up_stream.xls")
+    lele.afterProcess("/home/zhangyu/PycharmProjects/excel_city_data_handle/data/func/2006_output_up_stream.xls")
+
+    lele = SameRwFunc("/home/zhangyu/PycharmProjects/excel_city_data_handle/data/func/new_up_stream.xlsx")
+    lele.preProcess()
+    lele.process(False)
+    lele.afterProcess("/home/zhangyu/PycharmProjects/excel_city_data_handle/data/func/2019_output_up_stream.xls")
+
+    # lele = SameRwFunc("/home/zhangyu/PycharmProjects/excel_city_data_handle/data/func/new_down_stream.xlsx")
+    # lele.preProcess()
+    # lele.process()
+    # lele.afterProcess("/home/zhangyu/PycharmProjects/excel_city_data_handle/data/func/2006_output_down_stream.xls")
+
